@@ -1,0 +1,82 @@
+#!/bin/bash
+# OctagonOS Post-Installation Optimizer
+# Run this after fresh install for final tweaks
+
+set -e
+
+echo "╔══════════════════════════════════════════╗"
+echo "║     OctagonOS Post-Install Optimizer     ║"
+echo "╚══════════════════════════════════════════╝"
+echo ""
+
+if [ "$EUID" -ne 0 ]; then
+    echo "❌ Please run as root: sudo octagonos-postinstall"
+    exit 1
+fi
+
+# 1. Update system
+echo "📦 [1/8] Updating system packages..."
+apt update && apt upgrade -y
+
+# 2. Set up zRAM
+echo "💾 [2/8] Configuring zRAM swap..."
+cat > /etc/default/zramswap << 'EOF'
+ALGO=zstd
+PERCENT=50
+PRIORITY=100
+EOF
+systemctl enable --now zramswap
+
+# 3. Configure preload
+echo "⚡ [3/8] Enabling preload daemon..."
+systemctl enable --now preload
+
+# 4. Apply GRUB optimizations
+echo "🔧 [4/8] Applying GRUB optimizations..."
+if [ -f /etc/default/grub.octagonos ]; then
+    cp /etc/default/grub /etc/default/grub.backup
+    cp /etc/default/grub.octagonos /etc/default/grub
+    update-grub
+fi
+
+# 5. Enable Flatpak + Flathub
+echo "📦 [5/8] Setting up Flatpak..."
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+# 6. Set up PipeWire real-time priority
+echo "🔊 [6/8] Configuring PipeWire..."
+mkdir -p /etc/pipewire/pipewire.conf.d
+cat > /etc/pipewire/pipewire.conf.d/99-octagonos.conf << 'EOF'
+context.properties = {
+    default.clock.rate          = 48000
+    default.clock.quantum       = 1024
+    default.clock.min-quantum   = 32
+    default.clock.max-quantum   = 2048
+}
+EOF
+
+# 7. Optimize systemd journal
+echo "📋 [7/8] Optimizing systemd journal..."
+mkdir -p /etc/systemd/journald.conf.d
+cat > /etc/systemd/journald.conf.d/octagonos.conf << 'EOF'
+[Journal]
+SystemMaxUse=256M
+SystemMaxFileSize=32M
+MaxRetentionSec=1week
+Compress=yes
+EOF
+systemctl restart systemd-journald
+
+# 8. Final cleanup
+echo "🧹 [8/8] Cleaning up..."
+apt autoremove -y
+apt autoclean
+
+# Update initramfs
+update-initramfs -u
+
+echo ""
+echo "╔══════════════════════════════════════════╗"
+echo "║     ✅ OctagonOS optimization complete!   ║"
+echo "║     🔄 Reboot recommended.                ║"
+echo "╚══════════════════════════════════════════╝"

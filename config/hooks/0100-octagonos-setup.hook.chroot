@@ -1,0 +1,252 @@
+#!/bin/bash
+###############################################################################
+# OctagonOS Chroot Hook — 0100-octagonos-setup
+#
+# Runs inside the chroot during live-build to configure the system:
+#   • i386 multiarch (Steam)      • zram swap
+#   • SDDM display manager        • locale & timezone
+#   • Service orchestration        • earlyoom tuning
+#   • Flatpak / Flathub            • UFW firewall
+#   • OS branding                  • ananicy-cpp (from GitHub)
+#   • Apt cache cleanup
+###############################################################################
+
+set -euo pipefail
+
+info()  { echo "[OctagonOS-hook] $*"; }
+warn()  { echo "[OctagonOS-hook] WARNING: $*" >&2; }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Enable i386 architecture (required for Steam and 32-bit libraries)
+# ─────────────────────────────────────────────────────────────────────────────
+info "Enabling i386 architecture …"
+dpkg --add-architecture i386
+apt-get update -qq
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Ensure contrib, non-free, non-free-firmware are in sources
+# ─────────────────────────────────────────────────────────────────────────────
+info "Ensuring archive areas include contrib non-free non-free-firmware …"
+if [ -f /etc/apt/sources.list ]; then
+    sed -i 's/^\(deb.*bookworm\) main$/\1 main contrib non-free non-free-firmware/' \
+        /etc/apt/sources.list
+    sed -i 's/^\(deb.*bookworm-security\) main$/\1 main contrib non-free non-free-firmware/' \
+        /etc/apt/sources.list
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Configure zram swap (50 % of RAM, zstd compression)
+# ─────────────────────────────────────────────────────────────────────────────
+info "Configuring zram …"
+mkdir -p /etc/default
+cat > /etc/default/zramswap <<'ZRAM'
+# OctagonOS — zram configuration
+ALGO=zstd
+PERCENT=50
+PRIORITY=100
+ZRAM
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. Set SDDM as default display manager
+# ─────────────────────────────────────────────────────────────────────────────
+info "Setting SDDM as default display manager …"
+mkdir -p /etc/X11
+echo "/usr/bin/sddm" > /etc/X11/default-display-manager
+
+# Pre-answer debconf so dpkg never prompts interactively
+echo "sddm shared/default-x-display-manager select sddm" | debconf-set-selections 2>/dev/null || true
+
+# Configure SDDM breeze theme
+mkdir -p /etc/sddm.conf.d
+cat > /etc/sddm.conf.d/octagonos.conf <<'SDDM'
+[Theme]
+Current=breeze
+
+[General]
+Numlock=on
+SDDM
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Set default locale to en_US.UTF-8
+# ─────────────────────────────────────────────────────────────────────────────
+info "Setting locale to en_US.UTF-8 …"
+sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen 2>/dev/null || true
+echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+locale-gen en_US.UTF-8 || true
+cat > /etc/default/locale <<'LOC'
+LANG=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+LOC
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Set timezone to UTC (user changes after install)
+# ─────────────────────────────────────────────────────────────────────────────
+info "Setting timezone to UTC …"
+ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+echo "UTC" > /etc/timezone
+dpkg-reconfigure -f noninteractive tzdata 2>/dev/null || true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. Enable key services
+# ─────────────────────────────────────────────────────────────────────────────
+info "Enabling core services …"
+services_enable=(
+    NetworkManager
+    bluetooth
+    sddm
+    thermald
+    tlp
+    irqbalance
+    earlyoom
+    ufw
+    zramswap
+)
+for svc in "${services_enable[@]}"; do
+    systemctl enable "$svc" 2>/dev/null || warn "Could not enable $svc (may not exist yet)"
+done
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Disable unnecessary services
+# ─────────────────────────────────────────────────────────────────────────────
+info "Disabling unnecessary services …"
+services_disable=(
+    ModemManager
+    avahi-daemon
+    cups-browsed
+)
+for svc in "${services_disable[@]}"; do
+    systemctl disable "$svc" 2>/dev/null || true
+    systemctl mask    "$svc" 2>/dev/null || true
+done
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. Configure earlyoom
+# ─────────────────────────────────────────────────────────────────────────────
+info "Configuring earlyoom …"
+mkdir -p /etc/default
+cat > /etc/default/earlyoom <<'EOM'
+# OctagonOS — earlyoom configuration
+# Kill when <5% RAM or <5% swap free; prefer browsers
+EARLYOOM_ARGS="-m 5 -s 5 --prefer '^(Web|firefox|chrom)' -r 60 --avoid '^(sddm|plasmashell|kwin)'"
+EOM
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10. Configure Flatpak + Flathub
+# ─────────────────────────────────────────────────────────────────────────────
+info "Adding Flathub repository …"
+flatpak remote-add --if-not-exists flathub \
+    https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || \
+    warn "Could not add Flathub (flatpak may not be fully available in chroot)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 11. Write /etc/os-release — OctagonOS branding
+# ─────────────────────────────────────────────────────────────────────────────
+info "Writing OctagonOS branding to /etc/os-release …"
+cat > /etc/os-release <<'OSREL'
+PRETTY_NAME="OctagonOS 1.0 (Bookworm)"
+NAME="OctagonOS"
+VERSION_ID="1.0"
+VERSION="1.0 (Bookworm)"
+VERSION_CODENAME=bookworm
+ID=octagonos
+ID_LIKE=debian
+HOME_URL="https://github.com/octagonos"
+SUPPORT_URL="https://github.com/octagonos/issues"
+BUG_REPORT_URL="https://github.com/octagonos/issues"
+OSREL
+
+# Also update /etc/issue and /etc/issue.net
+echo "OctagonOS 1.0 \\n \\l" > /etc/issue
+echo "OctagonOS 1.0"          > /etc/issue.net
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 12. Configure UFW firewall
+# ─────────────────────────────────────────────────────────────────────────────
+info "Configuring UFW firewall …"
+ufw default deny incoming  2>/dev/null || true
+ufw default allow outgoing 2>/dev/null || true
+ufw --force enable         2>/dev/null || true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 13. Set Plymouth theme (if available)
+# ─────────────────────────────────────────────────────────────────────────────
+info "Configuring Plymouth boot splash …"
+if command -v plymouth-set-default-theme &>/dev/null; then
+    plymouth-set-default-theme -R breeze 2>/dev/null || \
+    plymouth-set-default-theme -R bgrt   2>/dev/null || \
+        warn "No suitable Plymouth theme found"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 14. Download & install ananicy-cpp from GitHub
+# ─────────────────────────────────────────────────────────────────────────────
+info "Installing ananicy-cpp from GitHub releases …"
+ANANICY_TMP=$(mktemp -d)
+ANANICY_REPO="CachyOS/ananicy-cpp"
+ANANICY_API="https://api.github.com/repos/${ANANICY_REPO}/releases/latest"
+
+# Fetch the latest release asset URL for amd64 .deb
+ANANICY_URL=$(curl -fsSL "$ANANICY_API" \
+    | grep -oP '"browser_download_url":\s*"\K[^"]*amd64\.deb' \
+    | head -1) || true
+
+if [ -n "${ANANICY_URL:-}" ]; then
+    info "Downloading ananicy-cpp from: ${ANANICY_URL}"
+    curl -fsSL -o "${ANANICY_TMP}/ananicy-cpp.deb" "$ANANICY_URL"
+    dpkg -i "${ANANICY_TMP}/ananicy-cpp.deb" || apt-get install -f -y
+    systemctl enable ananicy-cpp 2>/dev/null || true
+    ok_msg="ananicy-cpp installed successfully"
+else
+    warn "Could not determine ananicy-cpp download URL; skipping."
+    warn "Install manually from: https://github.com/${ANANICY_REPO}/releases"
+fi
+rm -rf "${ANANICY_TMP}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 15. Kernel parameter tuning (sysctl)
+# ─────────────────────────────────────────────────────────────────────────────
+info "Writing performance sysctl tuning …"
+cat > /etc/sysctl.d/99-octagonos-performance.conf <<'SYSCTL'
+# OctagonOS — kernel performance tuning
+#
+# Reduce swap tendency (prefer RAM)
+vm.swappiness=10
+# Faster dirty page writeback
+vm.dirty_ratio=10
+vm.dirty_background_ratio=5
+# Increase inotify limits (large projects, IDEs)
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=1024
+# Network performance
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+SYSCTL
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 16. GameMode configuration
+# ─────────────────────────────────────────────────────────────────────────────
+info "Writing GameMode configuration …"
+mkdir -p /etc
+cat > /etc/gamemode.ini <<'GAMEMODE'
+[general]
+renice=10
+ioprio=0
+
+[gpu]
+apply_gpu_optimisations=accept-responsibility
+amd_performance_level=high
+
+[custom]
+start=notify-send "GameMode" "Gaming optimisations activated"
+end=notify-send "GameMode" "Gaming optimisations deactivated"
+GAMEMODE
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 17. Clean apt cache to reduce ISO size
+# ─────────────────────────────────────────────────────────────────────────────
+info "Cleaning apt cache …"
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+rm -rf /tmp/* /var/tmp/*
+
+info "OctagonOS chroot hook completed successfully."

@@ -1,0 +1,22 @@
+# Live-build artifacts
+.build/
+chroot/
+binary/
+source/
+*.iso
+*.img
+*.zsync
+*.contents
+*.files
+*.packages
+chroot.packages.install
+chroot.packages.live
+binary.packages
+build-*.log
+
+# Temp files
+*.swp
+*~
+.DS_Store
+Thumbs.db
+output/

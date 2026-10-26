@@ -1,0 +1,67 @@
+#!/bin/bash
+# OctagonOS Game Mode Toggle
+# Usage: octagonos-gamemode [on|off]
+
+set -e
+
+ACTION="${1:-on}"
+
+if [ "$EUID" -ne 0 ]; then
+    exec pkexec "$0" "$@"
+fi
+
+case "$ACTION" in
+    on)
+        echo "🎮 OctagonOS Game Mode: ACTIVATING..."
+        
+        # Set CPU governor to performance
+        for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+            [ -f "$cpu" ] && echo "performance" > "$cpu"
+        done
+        
+        # Disable CPU boost limit
+        if [ -f /sys/devices/system/cpu/intel_pstate/no_turbo ]; then
+            echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo
+        fi
+        
+        # Reduce swappiness further
+        sysctl -w vm.swappiness=1 > /dev/null
+        
+        # Increase kernel sched granularity for throughput
+        sysctl -w kernel.sched_min_granularity_ns=10000000 > /dev/null
+        sysctl -w kernel.sched_wakeup_granularity_ns=15000000 > /dev/null
+        
+        # Disable kernel NMI watchdog
+        sysctl -w kernel.nmi_watchdog=0 > /dev/null
+        
+        # Compact memory
+        echo 1 > /proc/sys/vm/compact_memory 2>/dev/null || true
+        
+        # Drop caches
+        sync
+        echo 3 > /proc/sys/vm/drop_caches
+        
+        echo "✅ Game Mode ACTIVE — CPU: performance, swap: minimal, memory: optimized"
+        ;;
+    off)
+        echo "🖥️ OctagonOS Game Mode: DEACTIVATING..."
+        
+        # Restore CPU governor
+        for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+            [ -f "$cpu" ] && echo "schedutil" > "$cpu"
+        done
+        
+        # Restore swappiness
+        sysctl -w vm.swappiness=10 > /dev/null
+        
+        # Restore scheduler defaults
+        sysctl -w kernel.sched_min_granularity_ns=3000000 > /dev/null
+        sysctl -w kernel.sched_wakeup_granularity_ns=4000000 > /dev/null
+        
+        echo "✅ Game Mode DEACTIVATED — restored balanced profile"
+        ;;
+    *)
+        echo "Usage: octagonos-gamemode [on|off]"
+        exit 1
+        ;;
+esac

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a1a"/>
+      <stop offset="50%" stop-color="#141432"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </linearGradient>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#7b2ff7"/>
+      <stop offset="100%" stop-color="#ff007f"/>
+    </linearGradient>
+    <linearGradient id="innerGlow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7b2ff7" stop-opacity="0.8"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Circle/Rounded Area -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Octagon Frame -->
+  <polygon points="150,42 362,42 470,150 470,362 362,470 150,470 42,362 42,150" 
+           fill="none" stroke="url(#neonGrad)" stroke-width="12" filter="url(#glow)"/>
+           
+  <!-- Inner Concentric Octagon -->
+  <polygon points="170,82 342,82 430,170 430,342 342,430 170,430 82,342 82,170" 
+           fill="rgba(123, 47, 247, 0.08)" stroke="url(#innerGlow)" stroke-width="4" stroke-dasharray="8 6"/>
+
+  <!-- Center Core Gaming / Speed Emblem -->
+  <!-- Lightning bolt integrated with Debian swirl subtle touch -->
+  <path d="M 276 130 L 190 270 L 250 270 L 226 382 L 332 232 L 272 232 Z" 
+        fill="url(#neonGrad)" filter="url(#glow)"/>
+
+  <!-- Speed Dots / Orbit accents -->
+  <circle cx="256" cy="72" r="5" fill="#00d4ff"/>
+  <circle cx="440" cy="256" r="5" fill="#7b2ff7"/>
+  <circle cx="256" cy="440" r="5" fill="#ff007f"/>
+  <circle cx="72" cy="256" r="5" fill="#00d4ff"/>
+</svg>

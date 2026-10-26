@@ -1,0 +1,20 @@
+[General]
+ColorScheme=BreezeDark
+Name=Breeze Dark
+shadeSortColumn=true
+
+[Icons]
+Theme=breeze-dark
+
+[KDE]
+AnimationDurationFactor=0.5
+LookAndFeelPackage=org.kde.breezedark.desktop
+SingleClick=false
+widgetStyle=Breeze
+
+[KFileDialog Settings]
+Show Bookmarks=false
+Show Full Path=true
+
+[Toolbar style]
+ToolButtonStyle=TextBesideIcon

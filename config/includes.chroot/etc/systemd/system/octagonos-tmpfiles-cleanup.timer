@@ -1,0 +1,9 @@
+[Unit]
+Description=OctagonOS Temporary Files Cleanup Timer
+
+[Timer]
+OnBootSec=30min
+OnUnitActiveSec=1d
+
+[Install]
+WantedBy=timers.target

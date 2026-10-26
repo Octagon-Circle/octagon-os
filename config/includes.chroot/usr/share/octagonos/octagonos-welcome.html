@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to OctagonOS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0d0d2b 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .container {
+            max-width: 800px; padding: 40px; text-align: center;
+        }
+        .logo {
+            font-size: 72px; margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5em; margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .tagline {
+            font-size: 1.2em; color: #888; margin-bottom: 40px;
+        }
+        .features {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin-bottom: 40px;
+        }
+        .feature {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px; padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature .icon { font-size: 32px; margin-bottom: 10px; }
+        .feature h3 { color: #00d4ff; margin-bottom: 8px; }
+        .feature p { font-size: 0.9em; color: #aaa; }
+        .tips {
+            text-align: left; background: rgba(255,255,255,0.03);
+            border-radius: 12px; padding: 25px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .tips h2 { color: #7b2ff7; margin-bottom: 15px; }
+        .tips ul { list-style: none; }
+        .tips li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .tips li:last-child { border: none; }
+        .tips code {
+            background: rgba(0,212,255,0.1); padding: 2px 8px;
+            border-radius: 4px; font-family: monospace; color: #00d4ff;
+        }
+        .footer { margin-top: 30px; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">⬡</div>
+        <h1>Welcome to OctagonOS</h1>
+        <p class="tagline">Super-Optimized Linux for Desktop &amp; Gaming</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="icon">⚡</div>
+                <h3>Blazing Fast</h3>
+                <p>Optimized kernel, zRAM, tuned I/O schedulers, and preloading for instant response.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">🎮</div>
+                <h3>Gaming Ready</h3>
+                <p>Steam, Lutris, Vulkan, GameMode, and MangoHud pre-installed and configured.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">🖥️</div>
+                <h3>KDE Plasma</h3>
+                <p>Beautiful, customizable desktop with dark theme and optimized compositor.</p>
+            </div>
+            <div class="feature">
+                <div class="icon">🔒</div>
+                <h3>Secure</h3>
+                <p>UFW firewall, balanced kernel hardening, and automatic security updates.</p>
+            </div>
+        </div>
+
+        <div class="tips">
+            <h2>🚀 Quick Start Tips</h2>
+            <ul>
+                <li>🎮 Enable Game Mode: <code>octagonos-gamemode on</code></li>
+                <li>📦 Install apps via Discover or <code>flatpak install</code></li>
+                <li>🔧 System Monitor: <code>btop</code> in terminal</li>
+                <li>🖥️ GPU Info: <code>vulkaninfo --summary</code></li>
+                <li>⚙️ System info: <code>neofetch</code></li>
+                <li>🛡️ Firewall: <code>sudo ufw status</code></li>
+            </ul>
+        </div>
+
+        <p class="footer">OctagonOS 1.0 • Based on Debian GNU/Linux • GPL-3.0</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+[Desktop Entry]
+DefaultProfile=OctagonOS.profile
+
+[General]
+ConfigVersion=1
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled

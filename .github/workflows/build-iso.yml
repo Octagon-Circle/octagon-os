@@ -1,0 +1,40 @@
+name: Build OctagonOS ISO
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free disk space on runner
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          df -h
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build debootstrap squashfs-tools xorriso \
+            grub-efi-amd64-bin grub-pc-bin syslinux syslinux-common isolinux mtools dosfstools
+
+      - name: Build OctagonOS ISO
+        run: |
+          chmod +x build.sh clean.sh config/hooks/*.chroot
+          sudo ./build.sh
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OctagonOS-1.0-amd64
+          path: "*.iso"
+          if-no-files-found: error
+          retention-days: 14

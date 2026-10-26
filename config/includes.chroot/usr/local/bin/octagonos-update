@@ -1,0 +1,53 @@
+#!/bin/bash
+# OctagonOS System Updater
+
+set -e
+
+if [ "$EUID" -ne 0 ]; then
+    exec pkexec "$0" "$@"
+fi
+
+echo "⬡ OctagonOS System Updater"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Update package lists
+echo "📋 Fetching package lists..."
+apt update
+
+# Check for upgradeable packages
+UPGRADEABLE=$(apt list --upgradeable 2>/dev/null | grep -c upgradable || true)
+echo "📦 $UPGRADEABLE packages can be upgraded."
+
+if [ "$UPGRADEABLE" -gt 0 ]; then
+    echo ""
+    apt list --upgradeable 2>/dev/null | tail -20
+    echo ""
+    read -p "Proceed with upgrade? (Y/n): " confirm
+    if [ "$confirm" != "n" ] && [ "$confirm" != "N" ]; then
+        apt upgrade -y
+        apt autoremove -y
+        apt autoclean
+        echo ""
+        echo "✅ System updated successfully!"
+        
+        # Check if reboot needed
+        if [ -f /var/run/reboot-required ]; then
+            echo "🔄 Reboot required to apply kernel/system updates."
+        fi
+    else
+        echo "⏭️  Update skipped."
+    fi
+else
+    echo "✅ System is up to date!"
+fi
+
+# Update Flatpak
+if command -v flatpak &>/dev/null; then
+    echo ""
+    echo "📦 Updating Flatpak applications..."
+    flatpak update -y 2>/dev/null || true
+fi
+
+echo ""
+echo "Done!"

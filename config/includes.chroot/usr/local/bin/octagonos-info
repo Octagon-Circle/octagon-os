@@ -1,0 +1,14 @@
+#!/bin/bash
+# OctagonOS System Information
+echo ""
+echo "  ⬡  OctagonOS 1.0"
+echo "  ─────────────────────────────"
+echo "  Kernel:   $(uname -r)"
+echo "  Uptime:   $(uptime -p)"
+echo "  CPU:      $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)"
+echo "  RAM:      $(free -h | awk '/^Mem:/{print $3 "/" $2}')"
+echo "  GPU:      $(lspci | grep -i 'vga\|3d\|display' | head -1 | cut -d: -f3 | xargs)"
+echo "  Disk:     $(df -h / | awk 'NR==2{print $3 "/" $2 " (" $5 " used)"}')"
+echo "  Desktop:  KDE Plasma $(plasmashell --version 2>/dev/null | awk '{print $2}')"
+echo "  Shell:    $SHELL"
+echo ""

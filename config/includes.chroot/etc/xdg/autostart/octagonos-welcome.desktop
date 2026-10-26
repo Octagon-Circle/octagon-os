@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OctagonOS Welcome
+Comment=Welcome to OctagonOS
+Exec=sh -c 'if [ ! -f "$HOME/.config/octagonos-welcomed" ]; then xdg-open /usr/share/octagonos/octagonos-welcome.html; touch "$HOME/.config/octagonos-welcomed"; fi'
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel

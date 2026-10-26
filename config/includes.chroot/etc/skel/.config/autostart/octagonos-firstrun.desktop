@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=OctagonOS First Run
+Exec=sh -c 'if [ ! -f "$HOME/.config/octagonos-firstrun-done" ]; then xdg-open /usr/share/octagonos/octagonos-welcome.html && touch "$HOME/.config/octagonos-firstrun-done"; fi'
+Terminal=false
+Hidden=false
+NoDisplay=true

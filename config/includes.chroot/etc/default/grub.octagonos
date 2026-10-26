@@ -1,0 +1,10 @@
+# OctagonOS GRUB Configuration
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=3
+GRUB_DISTRIBUTOR="OctagonOS"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 nowatchdog nmi_watchdog=0 mitigations=auto threadirqs preempt=full"
+GRUB_CMDLINE_LINUX=""
+GRUB_TERMINAL_OUTPUT="gfxterm"
+GRUB_GFXMODE=1920x1080x32,auto
+GRUB_GFXPAYLOAD_LINUX=keep
+GRUB_DISABLE_OS_PROBER=false

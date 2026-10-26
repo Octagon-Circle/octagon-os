@@ -1,0 +1,5 @@
+[Plugins]
+org.kde.ActivityManager.ResourceScoringEnabled=false
+
+[activities]
+Default=OctagonOS
