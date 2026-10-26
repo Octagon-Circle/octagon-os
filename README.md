@@ -21,8 +21,11 @@
 ## Overview
 
 **OctagonOS** is a custom Debian Bookworm (stable) distribution purpose-built
-for desktop power users and gamers. It ships a carefully curated KDE Plasma
-desktop with aggressive system optimizations — fast boot times, low memory
+for desktop power users and gamers. It ships a dual desktop experience:
+- **⚡ Hyprland**: Dynamic tiling Wayland compositor with fluid physics, custom Waybar, Kitty, and ultra-low RAM footprint (~180MB RAM).
+- **🖥️ KDE Plasma**: Clean, minimal and familiar floating desktop with Breeze theming (~500MB RAM).
+
+With aggressive system optimizations — fast boot times, low memory
 footprint, high I/O throughput, and day-one gaming readiness with Vulkan, Steam,
 Lutris, and GameMode pre-configured out of the box.
 
@@ -30,10 +33,11 @@ Lutris, and GameMode pre-configured out of the box.
 
 | Feature | Details |
 |---|---|
+| **⚡ Hyprland Tiling** | Wayland compositor, animations bezier, `allow_tearing=true` for zero gaming latency |
 | **⚡ Fast Boot** | Stripped services, systemd-boot, zram swap with zstd, preload |
-| **🧠 Low RAM** | Apt recommends disabled, minimal KDE meta, earlyoom OOM guard |
-| **🎮 Gaming-Ready** | Steam, Lutris, GameMode, MangoHud, Vulkan drivers (Mesa) |
-| **🖥️ KDE Plasma** | Clean minimal Plasma desktop with Breeze theming |
+| **🧠 Ultra-Low RAM** | Hyprland (~180MB RAM) / KDE Plasma (~500MB RAM), earlyoom OOM guard |
+| **🎮 Gaming-Ready** | Steam (i386), Lutris, GameMode, MangoHud, Vulkan drivers (Mesa) |
+| **🖥️ Dual Desktop** | Select either Hyprland or KDE Plasma directly from SDDM login |
 | **🔊 Modern Audio** | PipeWire + WirePlumber (replaces PulseAudio) |
 | **📦 Flatpak** | Flathub pre-configured via Plasma Discover |
 | **🔒 Secure** | UFW firewall (deny incoming), auto-updates ready |
