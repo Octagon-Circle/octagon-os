@@ -1,0 +1,108 @@
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "Noto Sans", "JetBrains Mono", monospace;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(10, 10, 20, 0.85);
+    border-bottom: 2px solid rgba(0, 212, 255, 0.4);
+    color: #e0e0e0;
+}
+
+#custom-octagon {
+    font-size: 18px;
+    font-weight: 900;
+    color: #00d4ff;
+    padding: 0 14px;
+    margin: 4px 2px;
+    border-radius: 8px;
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+#custom-octagon:hover {
+    background: rgba(0, 212, 255, 0.3);
+}
+
+#workspaces button {
+    padding: 0 8px;
+    margin: 4px 2px;
+    color: #8888aa;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#workspaces button.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.6), rgba(123, 47, 247, 0.6));
+    border: 1px solid #00d4ff;
+}
+
+#workspaces button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+#window {
+    font-weight: bold;
+    color: #c0c0e0;
+}
+
+#cpu, #temperature, #memory, #wireplumber, #battery, #clock, #custom-power {
+    padding: 0 10px;
+    margin: 4px 2px;
+    border-radius: 6px;
+    background: rgba(25, 28, 48, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#cpu {
+    color: #00d4ff;
+}
+
+#temperature {
+    color: #7b2ff7;
+}
+
+#temperature.critical {
+    color: #ff3366;
+}
+
+#memory {
+    color: #00ffaa;
+}
+
+#wireplumber {
+    color: #ffaa00;
+}
+
+#battery {
+    color: #00e5ff;
+}
+
+#battery.warning {
+    color: #ffaa00;
+}
+
+#battery.critical {
+    color: #ff3366;
+}
+
+#clock {
+    color: #ffffff;
+    font-weight: bold;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(123, 47, 247, 0.2));
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+#custom-power {
+    color: #ff3366;
+    padding: 0 10px;
+}
+
+#custom-power:hover {
+    background: rgba(255, 51, 102, 0.3);
+}

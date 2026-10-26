@@ -121,6 +121,26 @@ flatpak
 xdg-desktop-portal
 xdg-desktop-portal-kde
 
+# --- Hyprland & Wayland Tiling Ecosystem ---
+wayland-protocols
+wl-clipboard
+grim
+slurp
+swappy
+waybar
+wofi
+swaybg
+swaylock
+swayidle
+mako-notifier
+kitty
+polkit-kde-agent-1
+xdg-desktop-portal-wlr
+pavucontrol
+brightnessctl
+playerctl
+jq
+
 # --- Printing (minimal) ---
 cups
 system-config-printer

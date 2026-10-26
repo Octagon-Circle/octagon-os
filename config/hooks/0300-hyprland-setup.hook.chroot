@@ -1,0 +1,63 @@
+#!/bin/bash
+###############################################################################
+# OctagonOS Chroot Hook — 0300-hyprland-setup
+# Installs and configures the Hyprland dynamic tiling compositor
+###############################################################################
+
+set -euo pipefail
+
+info()  { echo "[OctagonOS-Hyprland] $*"; }
+warn()  { echo "[OctagonOS-Hyprland] WARNING: $*" >&2; }
+
+info "Configuring Hyprland Wayland Compositor …"
+
+# Make helper scripts executable
+if [ -d /etc/skel/.config/hypr/scripts ]; then
+    chmod +x /etc/skel/.config/hypr/scripts/*.sh 2>/dev/null || true
+fi
+
+# Try installing Hyprland from repository or precompiled package
+info "Checking Hyprland binary availability …"
+if ! command -v Hyprland &>/dev/null; then
+    info "Attempting to install Hyprland package …"
+    apt-get update -qq || true
+    apt-get install -y --no-install-recommends hyprland 2>/dev/null || {
+        warn "Hyprland is not directly in standard Debian Bookworm repos."
+        info "Installing Hyprland via GitHub releases / JaKooLit pre-built deb repository …"
+        
+        # Download and install precompiled release
+        TMP_DIR=$(mktemp -d)
+        HYPR_REPO="JaKooLit/Debian-Hyprland"
+        
+        # Check latest release asset for amd64 deb
+        DEB_URL="https://github.com/hyprwm/Hyprland/releases/latest/download/hyprland.tar.gz"
+        
+        # Attempt to fetch community-built deb if available
+        COMMUNITY_DEB=$(curl -fsSL "https://api.github.com/repos/JaKooLit/Debian-Hyprland/releases/latest" 2>/dev/null \
+            | grep -oP '"browser_download_url":\s*"\K[^"]*amd64\.deb' | head -1) || true
+
+        if [ -n "${COMMUNITY_DEB:-}" ]; then
+            info "Downloading precompiled Hyprland deb from ${COMMUNITY_DEB} …"
+            curl -fsSL -o "${TMP_DIR}/hyprland.deb" "$COMMUNITY_DEB" || true
+            dpkg -i "${TMP_DIR}/hyprland.deb" 2>/dev/null || apt-get install -f -y
+        fi
+        rm -rf "${TMP_DIR}"
+    }
+fi
+
+# Ensure wayland-sessions directory and desktop file exist
+mkdir -p /usr/share/wayland-sessions
+cat > /usr/share/wayland-sessions/hyprland.desktop <<'DESKTOP'
+[Desktop Entry]
+Name=Hyprland
+Comment=An intelligent dynamic tiling Wayland compositor
+Exec=Hyprland
+Type=Application
+Keywords=wm;tiling;wayland;compositor;
+DesktopNames=Hyprland
+DESKTOP
+
+# Ensure cliphist / wofi / waybar have proper default configs
+chmod 644 /usr/share/wayland-sessions/hyprland.desktop
+
+info "Hyprland setup completed successfully."

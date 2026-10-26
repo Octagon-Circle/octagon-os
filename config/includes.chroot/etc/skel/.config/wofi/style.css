@@ -1,0 +1,50 @@
+window {
+    margin: 0px;
+    border: 2px solid #00d4ff;
+    border-radius: 12px;
+    background-color: rgba(10, 10, 20, 0.95);
+    font-family: "Noto Sans", sans-serif;
+    font-size: 14px;
+}
+
+#input {
+    margin: 12px;
+    padding: 8px 14px;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    color: #ffffff;
+    background-color: rgba(25, 28, 48, 0.8);
+}
+
+#inner-box {
+    margin: 6px 12px 12px 12px;
+    border: none;
+    background-color: transparent;
+}
+
+#outer-box {
+    margin: 0px;
+    border: none;
+    background-color: transparent;
+}
+
+#text {
+    margin: 5px;
+    border: none;
+    color: #e0e0e0;
+}
+
+#entry {
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+#entry:selected {
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0.3), rgba(123, 47, 247, 0.3));
+    border: 1px solid rgba(0, 212, 255, 0.6);
+}
+
+#entry:selected #text {
+    color: #00d4ff;
+    font-weight: bold;
+}
