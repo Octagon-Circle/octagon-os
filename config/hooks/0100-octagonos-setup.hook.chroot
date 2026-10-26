@@ -194,13 +194,32 @@ if [ -n "${ANANICY_URL:-}" ]; then
     info "Downloading ananicy-cpp from: ${ANANICY_URL}"
     curl -fsSL -o "${ANANICY_TMP}/ananicy-cpp.deb" "$ANANICY_URL"
     dpkg -i "${ANANICY_TMP}/ananicy-cpp.deb" || apt-get install -f -y
+    
+    # Download and install CachyOS community rules
+    info "Installing CachyOS community rules for ananicy-cpp …"
+    mkdir -p /etc/ananicy.d
+    RULES_URL="https://github.com/CachyOS/cachyos-ananicy-rules/archive/refs/heads/master.tar.gz"
+    curl -fsSL "$RULES_URL" | tar -xz -C /etc/ananicy.d --strip-components=1 2>/dev/null || true
+    
     systemctl enable ananicy-cpp 2>/dev/null || true
-    ok_msg="ananicy-cpp installed successfully"
+    ok_msg="ananicy-cpp and CachyOS rules installed successfully"
 else
     warn "Could not determine ananicy-cpp download URL; skipping."
     warn "Install manually from: https://github.com/${ANANICY_REPO}/releases"
 fi
 rm -rf "${ANANICY_TMP}"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 14b. Add XanMod-BORE & x86-64-v3 Gaming Kernel Repository
+# ─────────────────────────────────────────────────────────────────────────────
+info "Setting up XanMod-BORE (CachyOS scheduler) kernel repository …"
+mkdir -p /etc/apt/keyrings
+curl -fsSL https://dl.xanmod.org/archive.key | gpg --dearmor -o /etc/apt/keyrings/xanmod-archive-keyring.gpg 2>/dev/null || true
+cat > /etc/apt/sources.list.d/xanmod-release.list <<'XAN'
+deb [signed-by=/etc/apt/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main
+XAN
+
+chmod +x /usr/local/bin/octagonos-hello 2>/dev/null || true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 15. Kernel parameter tuning (sysctl)

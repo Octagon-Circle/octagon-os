@@ -1,0 +1,333 @@
+#!/usr/bin/env python3
+"""
+OctagonOS Hello & Control Center
+Inspired by CachyOS Hello - System Optimizer, Kernel Manager & Game Suite
+"""
+
+import sys
+import os
+import subprocess
+import shutil
+
+# Try GUI mode with PyQt6
+try:
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+        QLabel, QPushButton, QTabWidget, QProgressBar, QGridLayout,
+        QFrame, QMessageBox, QComboBox, QCheckBox, QScrollArea
+    )
+    from PyQt6.QtCore import Qt, QTimer
+    from PyQt6.QtGui import QFont, QIcon, QColor, QPalette
+    HAS_GUI = True
+except ImportError:
+    HAS_GUI = False
+
+def run_cmd(cmd, as_root=False):
+    """Execute shell command with pkexec if root is needed."""
+    if as_root and os.geteuid() != 0:
+        cmd = f"pkexec {cmd}"
+    try:
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        return res.returncode == 0, res.stdout.strip(), res.stderr.strip()
+    except Exception as e:
+        return False, "", str(e)
+
+class OctagonHelloGUI(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("OctagonOS Hello — CachyOS Performance Suite")
+        self.setMinimumSize(860, 560)
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #070711;
+                color: #e0e0e0;
+            }
+            QWidget {
+                color: #d0d0e0;
+                font-family: 'Noto Sans', sans-serif;
+            }
+            QTabWidget::pane {
+                border: 1px solid rgba(0, 212, 255, 0.2);
+                background: #0c0d18;
+                border-radius: 12px;
+                padding: 10px;
+            }
+            QTabBar::tab {
+                background: #141428;
+                color: #8888aa;
+                padding: 10px 18px;
+                margin-right: 4px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            QTabBar::tab:selected {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 rgba(0, 212, 255, 0.3), stop:1 rgba(123, 47, 247, 0.3));
+                color: #00d4ff;
+                border-bottom: 2px solid #00d4ff;
+            }
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0e1e38, stop:1 #1a1638);
+                border: 1px solid rgba(0, 212, 255, 0.3);
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 12px;
+                color: #ffffff;
+            }
+            QPushButton:hover {
+                border-color: #00d4ff;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #143058, stop:1 #2a1e58);
+            }
+            QPushButton:pressed {
+                background: #00d4ff;
+                color: #000000;
+            }
+            .card {
+                background-color: rgba(22, 25, 45, 0.7);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 10px;
+                padding: 12px;
+            }
+            .neon-title {
+                color: #00d4ff;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QComboBox {
+                background: #141428;
+                border: 1px solid #00d4ff;
+                border-radius: 6px;
+                padding: 6px;
+                color: #00d4ff;
+                font-weight: bold;
+            }
+        """)
+
+        self.init_ui()
+
+    def init_ui(self):
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        main_layout = QVBoxLayout(main_widget)
+        main_layout.setContentsMargins(20, 16, 20, 16)
+        main_layout.setSpacing(12)
+
+        # Header with Logo & Tagline
+        header = QHBoxLayout()
+        logo_label = QLabel("⬡")
+        logo_label.setStyleSheet("color: #00d4ff; font-size: 36px; font-weight: 900;")
+        header.addWidget(logo_label)
+
+        title_box = QVBoxLayout()
+        title = QLabel("OctagonOS Control Center")
+        title.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff;")
+        subtitle = QLabel("CachyOS-inspired performance engine & system tweaker for Debian")
+        subtitle.setStyleSheet("font-size: 12px; color: #8888aa;")
+        title_box.addWidget(title)
+        title_box.addWidget(subtitle)
+        header.addLayout(title_box)
+        header.addStretch()
+
+        # Kernel & Architecture Badge
+        uname_str = os.uname().release
+        badge = QLabel(f"Kernel: {uname_str}")
+        badge.setStyleSheet("background: rgba(0,255,170,0.15); color: #00ffaa; border: 1px solid #00ffaa; border-radius: 6px; padding: 6px 12px; font-family: monospace; font-size: 11px;")
+        header.addWidget(badge)
+
+        main_layout.addLayout(header)
+
+        # Tabs
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self.create_tweaks_tab(), "⚡ Ajustes de Rendimiento")
+        self.tabs.addTab(self.create_kernel_tab(), "🐧 Gestor de Kernels (BORE)")
+        self.tabs.addTab(self.create_gaming_tab(), "🎮 Gaming & Proton")
+        self.tabs.addTab(self.create_gpu_tab(), "🖥️ Controladores GPU")
+        self.tabs.addTab(self.create_apps_tab(), "📦 Aplicaciones & Navegadores")
+
+        main_layout.addWidget(self.tabs)
+
+        # Footer
+        footer = QHBoxLayout()
+        docs_btn = QPushButton("📖 Documentación")
+        docs_btn.clicked.connect(lambda: run_cmd("xdg-open https://github.com/octagonos"))
+        footer.addWidget(docs_btn)
+        footer.addStretch()
+
+        update_btn = QPushButton("🔄 Actualizar Sistema")
+        update_btn.setStyleSheet("background: #00d4ff; color: #000; font-weight: bold;")
+        update_btn.clicked.connect(lambda: run_cmd("octagonos-update", as_root=True))
+        footer.addWidget(update_btn)
+
+        main_layout.addLayout(footer)
+
+    def create_card(self, title_text, desc_text, action_widget):
+        frame = QFrame()
+        frame.setStyleSheet("background-color: rgba(22, 25, 45, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 10px;")
+        layout = QHBoxLayout(frame)
+        
+        info = QVBoxLayout()
+        t = QLabel(title_text)
+        t.setStyleSheet("color: #00d4ff; font-weight: bold; font-size: 13px;")
+        d = QLabel(desc_text)
+        d.setStyleSheet("color: #9999bb; font-size: 11px;")
+        info.addWidget(t)
+        info.addWidget(d)
+        
+        layout.addLayout(info)
+        layout.addStretch()
+        layout.addWidget(action_widget)
+        return frame
+
+    def create_tweaks_tab(self):
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(10)
+
+        # GameMode Toggle
+        self.gm_btn = QPushButton("ACTIVAR GAMEMODE")
+        self.gm_btn.clicked.connect(self.toggle_gamemode)
+        layout.addWidget(self.create_card("Feral GameMode & Octagon Tuning", "Ajusta gobernador CPU a 'performance', swappiness=1 y vacía cachés", self.gm_btn))
+
+        # Sched-ext (scx) selector (CachyOS style!)
+        self.sched_combo = QComboBox()
+        self.sched_combo.addItems(["BORE / EEVDF (Default)", "scx_lavd (Baja latencia juegos)", "scx_bpfland (Multitarea)", "scx_rusty (Equilibrado)"])
+        self.sched_combo.currentTextChanged.connect(self.switch_scheduler)
+        layout.addWidget(self.create_card("Sched-ext Gaming Scheduler (BPF)", "Elige el planificador de CPU en tiempo real para optimizar frametimes", self.sched_combo))
+
+        # Ananicy-cpp Status
+        ananicy_btn = QPushButton("Reiniciar Reglas")
+        ananicy_btn.clicked.connect(lambda: run_cmd("systemctl restart ananicy-cpp", as_root=True))
+        layout.addWidget(self.create_card("Ananicy-cpp (Auto-Nice de Procesos)", "Prioriza juegos y navegadores automáticamente en tiempo real", ananicy_btn))
+
+        # zRAM Status
+        zram_btn = QPushButton("Compactar Memoria")
+        zram_btn.clicked.connect(lambda: run_cmd("echo 1 > /proc/sys/vm/compact_memory", as_root=True))
+        layout.addWidget(self.create_card("zRAM (Swap ZSTD comprimido 50%)", "Mantiene la memoria física desfragmentada y veloz", zram_btn))
+
+        layout.addStretch()
+        return w
+
+    def create_kernel_tab(self):
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(10)
+
+        # XanMod BORE
+        b1 = QPushButton("Instalar XanMod BORE")
+        b1.clicked.connect(lambda: self.run_in_terminal("curl -s https://dl.xanmod.org/archive.key | gpg --dearmor -o /etc/apt/keyrings/xanmod-archive-keyring.gpg && echo 'deb [signed-by=/etc/apt/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' > /etc/apt/sources.list.d/xanmod-release.list && apt update && apt install -y linux-xanmod-edge-x64v3"))
+        layout.addWidget(self.create_card("Kernel XanMod Edge (BORE + x86-64-v3)", "Kernel optimizado con el planificador BORE de CachyOS y 1000Hz tickrate", b1))
+
+        # Liquorix
+        b2 = QPushButton("Instalar Liquorix")
+        b2.clicked.connect(lambda: self.run_in_terminal("curl -s 'https://liquorix.net/install-liquorix.sh' | bash"))
+        layout.addWidget(self.create_card("Kernel Liquorix (Zen Tuning)", "Kernel para desktop con balance de latencia y throughput multimedia", b2))
+
+        # Debian RT
+        b3 = QPushButton("Instalar Debian PREEMPT_RT")
+        b3.clicked.connect(lambda: self.run_in_terminal("apt update && apt install -y linux-image-rt-amd64"))
+        layout.addWidget(self.create_card("Kernel Debian Realtime (PREEMPT_RT)", "Núcleo de latencia dura determinista para audio profesional y simulación", b3))
+
+        layout.addStretch()
+        return w
+
+    def create_gaming_tab(self):
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(10)
+
+        p1 = QPushButton("Instalar ProtonUp-Qt")
+        p1.clicked.connect(lambda: self.run_in_terminal("flatpak install -y flathub net.davidotek.pupgui2"))
+        layout.addWidget(self.create_card("ProtonUp-Qt", "Gestor para instalar Proton-GE, Wine-GE y Luxtorpeda para Steam con 1 clic", p1))
+
+        p2 = QPushButton("Instalar Heroic Games")
+        p2.clicked.connect(lambda: self.run_in_terminal("flatpak install -y flathub com.heroicgameslauncher.hgl"))
+        layout.addWidget(self.create_card("Heroic Games Launcher", "Cliente nativo para Epic Games Store, GOG y Prime Gaming con Proton", p2))
+
+        p3 = QPushButton("Configurar MangoHud")
+        p3.clicked.connect(lambda: run_cmd("mkdir -p ~/.config/MangoHud && echo 'fps_limit=0\nfps\ngpu_stats\ncpu_stats\nram\nvram\nframe_timing=1\nposition=top-left' > ~/.config/MangoHud/MangoHud.conf"))
+        layout.addWidget(self.create_card("MangoHud & Goverlay", "HUD en tiempo real para FPS, latencia y telemetría de hardware en juegos", p3))
+
+        layout.addStretch()
+        return w
+
+    def create_gpu_tab(self):
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(10)
+
+        gpu_btn = QPushButton("Ejecutar Asistente GPU")
+        gpu_btn.clicked.connect(lambda: self.run_in_terminal("octagonos-gpu-setup"))
+        layout.addWidget(self.create_card("Detección de Controladores Gráficos", "Detecta e instala drivers NVIDIA propietarios (con Wayland) o verifica AMD/Intel Mesa", gpu_btn))
+
+        vulkan_btn = QPushButton("Ver Diagnóstico Vulkan")
+        vulkan_btn.clicked.connect(lambda: self.run_in_terminal("vulkaninfo --summary && read -p 'Presiona Enter...'"))
+        layout.addWidget(self.create_card("Vulkan ICD & Capacidades", "Comprueba extensiones de Vulkan 1.3, RayTracing y soporte de shader cache", vulkan_btn))
+
+        layout.addStretch()
+        return w
+
+    def create_apps_tab(self):
+        w = QWidget()
+        layout = QVBoxLayout(w)
+        layout.setSpacing(10)
+
+        zen_btn = QPushButton("Instalar Zen Browser")
+        zen_btn.clicked.connect(lambda: self.run_in_terminal("flatpak install -y flathub app.zen_browser.zen"))
+        layout.addWidget(self.create_card("Zen Browser", "Navegador ultrarrápido y moderno basado en Firefox con pestañas verticales", zen_btn))
+
+        brave_btn = QPushButton("Instalar Brave")
+        brave_btn.clicked.connect(lambda: self.run_in_terminal("curl -fsS https://dl.brave.com/install.sh | sh"))
+        layout.addWidget(self.create_card("Brave Browser", "Navegador Chromium de alto rendimiento con bloqueo nativo de rastreadores", brave_btn))
+
+        discord_btn = QPushButton("Instalar Discord & OBS")
+        discord_btn.clicked.connect(lambda: self.run_in_terminal("flatpak install -y flathub com.discordapp.Discord com.obsproject.Studio"))
+        layout.addWidget(self.create_card("Discord & OBS Studio", "Plataformas esenciales de comunicación y streaming de juegos", discord_btn))
+
+        layout.addStretch()
+        return w
+
+    def toggle_gamemode(self):
+        if "ACTIVAR" in self.gm_btn.text():
+            run_cmd("octagonos-gamemode on", as_root=True)
+            self.gm_btn.setText("DESACTIVAR GAMEMODE")
+            self.gm_btn.setStyleSheet("background: #ff3366; color: #fff;")
+            QMessageBox.information(self, "GameMode", "⚡ Perfil de Alto Rendimiento ACTIVADO (CPU performance, swappiness=1)")
+        else:
+            run_cmd("octagonos-gamemode off", as_root=True)
+            self.gm_btn.setText("ACTIVAR GAMEMODE")
+            self.gm_btn.setStyleSheet("")
+            QMessageBox.information(self, "GameMode", "🖥️ Perfil Equilibrado Restaurado")
+
+    def switch_scheduler(self, text):
+        if "lavd" in text:
+            run_cmd("systemctl restart scx_lavd 2>/dev/null || true", as_root=True)
+            QMessageBox.information(self, "Scheduler", "Planificador scx_lavd seleccionado (optimizado para latencia en gaming).")
+        elif "bpfland" in text:
+            run_cmd("systemctl restart scx_bpfland 2>/dev/null || true", as_root=True)
+            QMessageBox.information(self, "Scheduler", "Planificador scx_bpfland seleccionado.")
+
+    def run_in_terminal(self, cmd):
+        # Open in Konsole or Kitty
+        term_cmd = f"konsole -e bash -c '{cmd}; echo \"Presiona Enter para cerrar...\"; read' || kitty bash -c '{cmd}; echo \"Presiona Enter para cerrar...\"; read'"
+        subprocess.Popen(term_cmd, shell=True)
+
+def main():
+    if HAS_GUI and ("DISPLAY" in os.environ or "WAYLAND_DISPLAY" in os.environ):
+        app = QApplication(sys.argv)
+        gui = OctagonHelloGUI()
+        gui.show()
+        sys.exit(app.exec())
+    else:
+        # CLI fallback mode
+        print("⬡ OctagonOS Hello (CLI Mode)")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("1. Activar GameMode: sudo octagonos-gamemode on")
+        print("2. Desactivar GameMode: sudo octagonos-gamemode off")
+        print("3. Configurar GPU: sudo octagonos-gpu-setup")
+        print("4. Actualizar Sistema: sudo octagonos-update")
+        print("5. Para abrir la interfaz gráfica ejecuta: octagonos-hello en un entorno X11/Wayland.")
+
+if __name__ == '__main__':
+    main()

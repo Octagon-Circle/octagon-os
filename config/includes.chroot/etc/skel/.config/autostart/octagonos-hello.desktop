@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=OctagonOS Hello
+Comment=OctagonOS Welcome & Performance Engine
+Exec=octagonos-hello
+Icon=preferences-system
+Terminal=false
+StartupNotify=false
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel

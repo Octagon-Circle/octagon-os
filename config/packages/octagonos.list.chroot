@@ -85,6 +85,7 @@ bluez
 # --- System Utilities ---
 htop
 btop
+fastfetch
 neofetch
 curl
 wget
@@ -92,6 +93,7 @@ git
 unzip
 p7zip-full
 bash-completion
+zsh
 zram-tools
 preload
 earlyoom
@@ -99,6 +101,9 @@ thermald
 tlp
 tlp-rdw
 irqbalance
+python3
+python3-pyqt6
+zenity
 # NOTE: ananicy-cpp is NOT in the Debian repos.  It is installed via the
 #       chroot hook script (0100-octagonos-setup.hook.chroot) which downloads
 #       the latest .deb from the GitHub releases page:

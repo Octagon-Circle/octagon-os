@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=OctagonOS Hello
+GenericName=Control Center & Performance Tweaker
+Comment=CachyOS-inspired performance engine and kernel manager
+Exec=octagonos-hello
+Icon=preferences-system
+Terminal=false
+Categories=System;Settings;
+StartupNotify=true

@@ -53,5 +53,5 @@ fi
 # Welcome (first terminal of session)
 if [ -z "$OCTAGONOS_GREETED" ]; then
     export OCTAGONOS_GREETED=1
-    octagonos-info 2>/dev/null
+    fastfetch 2>/dev/null || octagonos-info 2>/dev/null || true
 fi

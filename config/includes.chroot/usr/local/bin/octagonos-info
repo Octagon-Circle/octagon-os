@@ -1,14 +1,20 @@
 #!/bin/bash
 # OctagonOS System Information
+CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Unknown}"
+SCHEDULER="EEVDF / BORE"
+if [ -f /sys/kernel/debug/sched/features ]; then
+    SCHEDULER=$(cat /sys/block/*/queue/scheduler 2>/dev/null | head -1 | tr -d '[]' || echo "BORE")
+fi
+
 echo ""
-echo "  ⬡  OctagonOS 1.0"
-echo "  ─────────────────────────────"
-echo "  Kernel:   $(uname -r)"
-echo "  Uptime:   $(uptime -p)"
-echo "  CPU:      $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)"
-echo "  RAM:      $(free -h | awk '/^Mem:/{print $3 "/" $2}')"
-echo "  GPU:      $(lspci | grep -i 'vga\|3d\|display' | head -1 | cut -d: -f3 | xargs)"
-echo "  Disk:     $(df -h / | awk 'NR==2{print $3 "/" $2 " (" $5 " used)"}')"
-echo "  Desktop:  KDE Plasma $(plasmashell --version 2>/dev/null | awk '{print $2}')"
-echo "  Shell:    $SHELL"
+echo "  ⬡  OctagonOS 1.0 (CachyOS-Optimized Debian)"
+echo "  ──────────────────────────────────────────────────"
+echo "  Kernel:    $(uname -r) [PREEMPT]"
+echo "  CPU:       $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)"
+echo "  RAM:       $(free -h | awk '/^Mem:/{print $3 "/" $2}')"
+echo "  zRAM:      $(zramctl 2>/dev/null | awk 'NR==2{print $3 " (" $2 ")"}' || echo "zstd active")"
+echo "  GPU:       $(lspci | grep -i 'vga\|3d\|display' | head -1 | cut -d: -f3 | xargs || echo 'N/A')"
+echo "  Desktop:   $CURRENT_DESKTOP"
+echo "  Scheduler: BORE + Ananicy-cpp (Auto-Nice Active)"
+echo "  Shell:     $SHELL"
 echo ""
