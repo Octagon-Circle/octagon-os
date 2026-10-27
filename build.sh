@@ -164,7 +164,23 @@ configure() {
 
     cd "${SCRIPT_DIR}"
 
+    # Auto-sanitize: remove any residual fastfetch or swappy entries from all package lists
+    for f in config/package-lists/*.list* config/packages/*.list*; do
+        if [ -f "$f" ]; then
+            sed -i '/^fastfetch$/d' "$f" 2>/dev/null || true
+            sed -i '/^swappy$/d' "$f" 2>/dev/null || true
+        fi
+    done
+
+    # Unmount any active chroot mounts before cleaning
+    umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
+
     # Clean any prior partial state and stale generated lb files (keeping custom hooks/includes/packages)
+    rm -rf .build/ chroot/ binary/ source/
+    rm -f chroot.packages.install chroot.packages.live binary.packages
     rm -f config/common config/bootstrap config/chroot config/binary config/source
     lb clean --purge 2>/dev/null || true
 
