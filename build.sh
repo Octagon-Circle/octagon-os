@@ -101,14 +101,21 @@ preflight() {
 unmount_chroot() {
     info "Ensuring no active chroot mounts remain …"
     if [ -d "${SCRIPT_DIR}/chroot" ]; then
-        grep "${SCRIPT_DIR}/chroot" /proc/mounts | awk '{print $2}' | sort -r | while read -r mnt; do
-            umount -lf "$mnt" 2>/dev/null || true
-        done
+        local mnts
+        mnts=$(awk -v dir="${SCRIPT_DIR}/chroot" '$2 ~ dir {print $2}' /proc/mounts 2>/dev/null | sort -r || true)
+        if [ -n "${mnts:-}" ]; then
+            while IFS= read -r mnt; do
+                if [ -n "$mnt" ]; then
+                    umount -lf "$mnt" 2>/dev/null || true
+                fi
+            done <<< "$mnts"
+        fi
     fi
     umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
     umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
     umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
     umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
+    return 0
 }
 
 # ── Install prerequisites ───────────────────────────────────────────────────
@@ -158,10 +165,11 @@ ensure_debian_keyring() {
     info "Verifying Debian 12 (Bookworm) GPG archive keys on host …"
     mkdir -p /usr/share/keyrings
 
-    # Always ensure release-12 and release-12-security keys are present on Ubuntu/Debian hosts
+    # Always ensure Debian 12 archive and release keys are present on Ubuntu/Debian hosts
     local tmp_deb12="/tmp/deb12.gpg"
-    curl -fsSL "https://ftp-master.debian.org/keys/release-12.asc" | gpg --dearmor > "${tmp_deb12}" 2>/dev/null || true
-    curl -fsSL "https://ftp-master.debian.org/keys/release-12-security.asc" | gpg --dearmor >> "${tmp_deb12}" 2>/dev/null || true
+    curl -fsSL "https://ftp-master.debian.org/keys/release-12.asc" 2>/dev/null | gpg --dearmor > "${tmp_deb12}" 2>/dev/null || true
+    curl -fsSL "https://ftp-master.debian.org/keys/archive-key-12.asc" 2>/dev/null | gpg --dearmor >> "${tmp_deb12}" 2>/dev/null || true
+    curl -fsSL "https://ftp-master.debian.org/keys/archive-key-12-security.asc" 2>/dev/null | gpg --dearmor >> "${tmp_deb12}" 2>/dev/null || true
     if [[ -s "${tmp_deb12}" ]]; then
         if [[ -L /usr/share/keyrings/debian-archive-keyring.gpg ]]; then
             local target

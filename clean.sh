@@ -32,9 +32,14 @@ cd "${SCRIPT_DIR}"
 # Unmount any active chroot mounts before attempting to clean
 info "Unmounting any active chroot mounts …"
 if [ -d "${SCRIPT_DIR}/chroot" ]; then
-    grep "${SCRIPT_DIR}/chroot" /proc/mounts | awk '{print $2}' | sort -r | while read -r mnt; do
-        umount -lf "$mnt" 2>/dev/null || true
-    done
+    mnts=$(awk -v dir="${SCRIPT_DIR}/chroot" '$2 ~ dir {print $2}' /proc/mounts 2>/dev/null | sort -r || true)
+    if [ -n "${mnts:-}" ]; then
+        while IFS= read -r mnt; do
+            if [ -n "$mnt" ]; then
+                umount -lf "$mnt" 2>/dev/null || true
+            fi
+        done <<< "$mnts"
+    fi
 fi
 umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
 umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
