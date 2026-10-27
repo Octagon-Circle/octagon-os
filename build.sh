@@ -98,6 +98,41 @@ install_deps() {
     ok "All build dependencies satisfied"
 }
 
+# ── Ensure host has latest Debian 12 (Bookworm) GPG keys ─────────────────────
+ensure_debian_keyring() {
+    info "Verifying Debian 12 (Bookworm) GPG archive keys on host …"
+    mkdir -p /usr/share/keyrings
+
+    local needs_update=0
+    if [[ ! -f /usr/share/keyrings/debian-archive-keyring.gpg ]]; then
+        needs_update=1
+    elif ! gpg --no-default-keyring --keyring /usr/share/keyrings/debian-archive-keyring.gpg --list-keys 2>/dev/null | grep -qi "8783D481"; then
+        needs_update=1
+    fi
+
+    if (( needs_update == 1 )); then
+        info "Host debian-archive-keyring is missing Debian 12 release key (F8D2585B8783D481). Updating …"
+        local keyring_deb
+        keyring_deb=$(curl -s "http://ftp.debian.org/debian/pool/main/d/debian-archive-keyring/" 2>/dev/null | grep -o 'debian-archive-keyring_[0-9\.\+deb]*_all\.deb' | tail -n1 || true)
+        if [[ -n "${keyring_deb}" ]]; then
+            info "Downloading and installing ${keyring_deb} from Debian pool …"
+            if curl -fsSL -o "/tmp/${keyring_deb}" "http://ftp.debian.org/debian/pool/main/d/debian-archive-keyring/${keyring_deb}"; then
+                dpkg -i "/tmp/${keyring_deb}" 2>/dev/null || true
+                rm -f "/tmp/${keyring_deb}"
+            fi
+        fi
+
+        # Fallback: import release-12 directly from ftp-master.debian.org
+        if ! gpg --no-default-keyring --keyring /usr/share/keyrings/debian-archive-keyring.gpg --list-keys 2>/dev/null | grep -qi "8783D481"; then
+            info "Importing release-12 key directly from ftp-master.debian.org …"
+            curl -fsSL "https://ftp-master.debian.org/keys/release-12.asc" | gpg --dearmor >> /usr/share/keyrings/debian-archive-keyring.gpg 2>/dev/null || true
+            curl -fsSL "https://ftp-master.debian.org/keys/release-12-security.asc" | gpg --dearmor >> /usr/share/keyrings/debian-archive-keyring.gpg 2>/dev/null || true
+        fi
+    fi
+
+    ok "Debian 12 release key verified in host keyring"
+}
+
 # ── Enable i386 architecture (required for Steam) ───────────────────────────
 enable_i386() {
     info "Enabling i386 architecture on the host (needed for Steam/wine)…"
@@ -234,6 +269,7 @@ main() {
 
     preflight
     install_deps
+    ensure_debian_keyring
     enable_i386
     configure "$@"
     build
