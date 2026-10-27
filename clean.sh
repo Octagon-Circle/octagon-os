@@ -45,5 +45,6 @@ rm -f  build-*.log
 rm -rf chroot/ binary/ source/
 rm -f  chroot.packages.install chroot.packages.live
 rm -f  binary.packages
+rm -f  config/common config/bootstrap config/chroot config/binary config/source
 
 info "Clean complete. Ready for a fresh build."

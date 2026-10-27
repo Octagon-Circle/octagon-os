@@ -80,7 +80,7 @@ install_deps() {
 
     local pkgs=(live-build debootstrap squashfs-tools xorriso
                 grub-efi-amd64-bin grub-pc-bin syslinux syslinux-common
-                isolinux mtools dosfstools)
+                isolinux mtools dosfstools debian-archive-keyring)
 
     local missing=()
     for pkg in "${pkgs[@]}"; do
@@ -116,7 +116,8 @@ configure() {
 
     cd "${SCRIPT_DIR}"
 
-    # Clean any prior partial state but keep config/
+    # Clean any prior partial state and stale generated lb files (keeping custom hooks/includes/packages)
+    rm -f config/common config/bootstrap config/chroot config/binary config/source
     lb clean --purge 2>/dev/null || true
 
     # Detect whether lb uses --bootloaders (Debian newer) or --bootloader (Ubuntu/Debian 3.x)
@@ -126,8 +127,10 @@ configure() {
     fi
 
     lb config noauto \
+        --mode                  "debian" \
         --distribution          "${DISTRIBUTION}" \
         --architectures         "${ARCHITECTURE}" \
+        --keyring-packages      "debian-archive-keyring" \
         --binary-images         iso-hybrid \
         ${bl_opt}               "grub-efi" \
         --mirror-bootstrap      "http://deb.debian.org/debian" \
