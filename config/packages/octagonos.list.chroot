@@ -6,6 +6,8 @@
 
 # --- Base System ---
 linux-image-amd64
+ca-certificates
+apt-transport-https
 firmware-linux
 firmware-linux-nonfree
 firmware-iwlwifi

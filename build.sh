@@ -113,11 +113,17 @@ configure() {
     # Clean any prior partial state but keep config/
     lb clean --purge 2>/dev/null || true
 
+    # Detect whether lb uses --bootloaders (Debian newer) or --bootloader (Ubuntu/Debian 3.x)
+    local bl_opt="--bootloader"
+    if lb config --help 2>&1 | grep -q -- '--bootloaders'; then
+        bl_opt="--bootloaders"
+    fi
+
     lb config noauto \
         --distribution          "${DISTRIBUTION}" \
         --architectures         "${ARCHITECTURE}" \
         --binary-images         iso-hybrid \
-        --bootloaders           "grub-efi,syslinux" \
+        ${bl_opt}               "grub-efi" \
         --mirror-bootstrap      "http://deb.debian.org/debian" \
         --mirror-chroot         "http://deb.debian.org/debian" \
         --mirror-binary         "http://deb.debian.org/debian" \
@@ -134,12 +140,8 @@ configure() {
         --firmware-chroot       "true" \
         --cache                 "true" \
         --compression           "xz" \
-        --debootstrap-options   "--include=apt-transport-https,ca-certificates" \
         --security              "true" \
-        --updates               "true" \
         --backports             "false" \
-        --apt-indices            "false" \
-        --win32-loader          "false" \
         "${@}"
 
     ok "lb config complete"
