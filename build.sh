@@ -159,6 +159,11 @@ build() {
         die "lb build failed with exit code ${rc}. Check ${LOG_FILE}"
     fi
 
+    # Rename to clean release ISO name
+    if [[ -f "live-image-amd64.hybrid.iso" ]]; then
+        mv -f "live-image-amd64.hybrid.iso" "OctagonOS-1.0-amd64.iso"
+    fi
+
     ok "Build completed successfully!"
 }
 
