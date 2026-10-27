@@ -179,7 +179,7 @@ configure() {
         --firmware-chroot       "true" \
         --cache                 "true" \
         --compression           "xz" \
-        --security              "true" \
+        --security              "false" \
         --backports             "false" \
         "${@}"
 
@@ -200,12 +200,16 @@ build() {
 
     cd "${SCRIPT_DIR}"
 
-    # Apply container compatibility patches for Colab/Docker/LXD environments
-    info "Applying container filesystem compatibility patches (bind mounts) …"
-    for dir in /usr/lib/live/build /usr/share/live/build /usr/lib/live/build/scripts/build; do
+    # Apply legacy live-build compatibility patches (/updates -> -security) and container bind mounts
+    info "Applying live-build compatibility patches …"
+    for dir in /usr/lib/live/build /usr/share/live/build /usr/share/live/build/scripts/build; do
         if [ -d "$dir" ]; then
             sed -i 's|mount -t proc.*chroot/proc|mount --bind /proc chroot/proc|g' "$dir"/* 2>/dev/null || true
             sed -i 's|mount -t sysfs.*chroot/sys|mount --bind /sys chroot/sys|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|\${LB_DISTRIBUTION}/updates|\${LB_DISTRIBUTION}-security|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|\${DISTRIBUTION}/updates|\${DISTRIBUTION}-security|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|@DISTRIBUTION@/updates|@DISTRIBUTION@-security|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|bookworm/updates|bookworm-security|g' "$dir"/* 2>/dev/null || true
         fi
     done
 
