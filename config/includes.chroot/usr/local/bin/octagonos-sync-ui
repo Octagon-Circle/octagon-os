@@ -1,0 +1,52 @@
+#!/bin/bash
+# OctagonOS User Interface Synchronizer
+# Syncs personal desktop configs (Waybar, Hyprland, Kitty) with the latest GitHub repo
+
+set -e
+
+REPO_URL="https://raw.githubusercontent.com/Octagon-Circle/octagon-os/main/config/includes.chroot/etc/skel/.config"
+
+echo "⬡ OctagonOS Interface Sync"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Este comando descargará los últimos diseños de interfaz (Hyprland, Waybar, Wofi, Kitty) desde GitHub."
+echo ""
+read -p "¿Deseas sincronizar tu interfaz ahora? Se creará una copia de respaldo de tu configuración actual. (Y/n): " confirm
+
+if [ "$confirm" = "n" ] || [ "$confirm" = "N" ]; then
+    echo "Cancelado."
+    exit 0
+fi
+
+BACKUP_DIR="$HOME/.config/octagonos-backup-$(date +%Y%m%d-%H%M%S)"
+echo "💾 Creando copia de seguridad en: $BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+
+for item in hypr waybar wofi kitty; do
+    if [ -d "$HOME/.config/$item" ]; then
+        cp -r "$HOME/.config/$item" "$BACKUP_DIR/"
+    fi
+done
+
+echo "⬇️ Descargando nuevas configuraciones de interfaz..."
+# Waybar
+mkdir -p "$HOME/.config/waybar"
+curl -fsSL "${REPO_URL}/waybar/config" -o "$HOME/.config/waybar/config" 2>/dev/null || true
+curl -fsSL "${REPO_URL}/waybar/style.css" -o "$HOME/.config/waybar/style.css" 2>/dev/null || true
+
+# Hyprland
+mkdir -p "$HOME/.config/hypr"
+curl -fsSL "${REPO_URL}/hypr/hyprland.conf" -o "$HOME/.config/hypr/hyprland.conf" 2>/dev/null || true
+
+# Wofi
+mkdir -p "$HOME/.config/wofi"
+curl -fsSL "${REPO_URL}/wofi/config" -o "$HOME/.config/wofi/config" 2>/dev/null || true
+curl -fsSL "${REPO_URL}/wofi/style.css" -o "$HOME/.config/wofi/style.css" 2>/dev/null || true
+
+# Reload Waybar if running
+killall waybar 2>/dev/null || true
+hyprctl reload 2>/dev/null || true
+nohup waybar >/dev/null 2>&1 &
+
+echo ""
+echo "✅ ¡Interfaz actualizada con éxito sin reinstalar el sistema!"
+echo "Tus configuraciones anteriores están a salvo en: $BACKUP_DIR"
