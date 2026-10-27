@@ -1,0 +1,156 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  OctagonOS Package Selection
+#  Optimized for desktop daily use + gaming on KDE Plasma
+#  Distribution: Debian Bookworm (stable) — amd64
+# ═══════════════════════════════════════════════════════════════════════════
+
+# --- Base System ---
+linux-image-amd64
+ca-certificates
+apt-transport-https
+firmware-linux
+firmware-linux-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-atheros
+firmware-misc-nonfree
+intel-microcode
+amd64-microcode
+systemd-boot
+efibootmgr
+
+# --- KDE Plasma Desktop (minimal) ---
+plasma-desktop
+plasma-workspace
+sddm
+kde-spectacle
+dolphin
+konsole
+kate
+ark
+gwenview
+okular
+plasma-nm
+plasma-pa
+powerdevil
+bluedevil
+kde-config-sddm
+breeze
+breeze-gtk-theme
+breeze-icon-theme
+kde-cli-tools
+kscreen
+systemsettings
+kinfocenter
+plasma-discover
+plasma-discover-backend-flatpak
+
+# --- Multimedia (PipeWire audio stack) ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+ffmpeg
+vlc
+gstreamer1.0-plugins-base
+gstreamer1.0-plugins-good
+gstreamer1.0-plugins-ugly
+gstreamer1.0-plugins-bad
+gstreamer1.0-libav
+
+# --- Gaming ---
+# NOTE: steam-installer requires i386 architecture.  The build script and
+#       chroot hook enable it automatically via `dpkg --add-architecture i386`.
+steam-installer
+lutris
+gamemode
+mangohud
+vulkan-tools
+mesa-vulkan-drivers
+libvulkan1
+vulkan-validationlayers
+
+# --- GPU Drivers (Mesa — covers AMD, Intel, Nouveau) ---
+mesa-utils
+libgl1-mesa-dri
+libglx-mesa0
+xserver-xorg-video-amdgpu
+xserver-xorg-video-intel
+xserver-xorg-video-nouveau
+
+# --- Networking ---
+network-manager
+wpasupplicant
+bluetooth
+bluez
+
+# --- System Utilities ---
+htop
+btop
+fastfetch
+neofetch
+curl
+wget
+git
+unzip
+p7zip-full
+bash-completion
+zsh
+zram-tools
+preload
+earlyoom
+thermald
+tlp
+tlp-rdw
+irqbalance
+python3
+python3-pyqt6
+zenity
+# NOTE: ananicy-cpp is NOT in the Debian repos.  It is installed via the
+#       chroot hook script (0100-octagonos-setup.hook.chroot) which downloads
+#       the latest .deb from the GitHub releases page:
+#       https://github.com/CachyOS/ananicy-cpp/releases
+
+# --- Filesystem ---
+ntfs-3g
+exfatprogs
+dosfstools
+btrfs-progs
+
+# --- Fonts ---
+fonts-noto
+fonts-noto-color-emoji
+fonts-liberation2
+fonts-dejavu
+
+# --- Flatpak support ---
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-kde
+
+# --- Hyprland & Wayland Tiling Ecosystem ---
+wayland-protocols
+wl-clipboard
+grim
+slurp
+swappy
+waybar
+wofi
+swaybg
+swaylock
+swayidle
+mako-notifier
+kitty
+polkit-kde-agent-1
+xdg-desktop-portal-wlr
+pavucontrol
+brightnessctl
+playerctl
+jq
+
+# --- Printing (minimal) ---
+cups
+system-config-printer
+
+# --- Firewall ---
+ufw

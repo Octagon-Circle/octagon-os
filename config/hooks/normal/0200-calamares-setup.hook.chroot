@@ -1,0 +1,226 @@
+#!/bin/bash
+# OctagonOS: Install and configure Calamares graphical installer
+set -e
+
+echo "[OctagonOS] Installing Calamares installer framework..."
+
+# Install Calamares and its dependencies
+apt-get install -y --no-install-recommends \
+    calamares \
+    calamares-settings-debian \
+    qml-module-qtquick2 \
+    qml-module-qtquick-controls \
+    qml-module-qtquick-controls2 \
+    qml-module-qtquick-layouts \
+    qml-module-qtquick-window2
+
+# Create OctagonOS branding directory
+mkdir -p /etc/calamares/branding/octagonos
+
+# Create branding descriptor
+cat > /etc/calamares/branding/octagonos/branding.desc << 'BRANDING'
+---
+componentName: octagonos
+
+strings:
+    productName:        "OctagonOS"
+    shortProductName:   "OctagonOS"
+    version:            "1.0"
+    shortVersion:       "1.0"
+    versionedName:      "OctagonOS 1.0"
+    shortVersionedName: "OctagonOS 1.0"
+    bootloaderEntryName: "OctagonOS"
+    productUrl:         "https://octagonos.org"
+    supportUrl:         "https://octagonos.org/support"
+    knownIssuesUrl:     "https://octagonos.org/issues"
+    releaseNotesUrl:    "https://octagonos.org/releases/1.0"
+
+images:
+    productLogo:        "logo.png"
+    productIcon:        "logo.png"
+    productWelcome:     "welcome.png"
+
+slideshow:              "show.qml"
+
+style:
+    sidebarBackground:  "#1a1a3e"
+    sidebarText:        "#FFFFFF"
+    sidebarTextSelect:  "#00d4ff"
+    sidebarTextHighlight: "#7b2ff7"
+BRANDING
+
+# Create a minimal slideshow QML
+cat > /etc/calamares/branding/octagonos/show.qml << 'QML'
+import QtQuick 2.0;
+import calamares.slideshow 1.0;
+
+Presentation {
+    id: presentation
+
+    Slide {
+        Rectangle {
+            anchors.fill: parent
+            color: "#0a0a1a"
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 20
+                
+                Text {
+                    text: "⬡"
+                    font.pixelSize: 80
+                    color: "#00d4ff"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                
+                Text {
+                    text: "Installing OctagonOS..."
+                    font.pixelSize: 28
+                    color: "#ffffff"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                
+                Text {
+                    text: "Super-Optimized Linux for Desktop & Gaming"
+                    font.pixelSize: 16
+                    color: "#888888"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
+        }
+    }
+
+    Slide {
+        Rectangle {
+            anchors.fill: parent
+            color: "#0a0a1a"
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 15
+                
+                Text { text: "⚡"; font.pixelSize: 60; color: "#00d4ff"; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "Blazing Fast Boot"; font.pixelSize: 24; color: "#ffffff"; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "Optimized kernel parameters, zRAM compression,\ntuned I/O schedulers, and service preloading."; font.pixelSize: 14; color: "#aaaaaa"; horizontalAlignment: Text.AlignHCenter; anchors.horizontalCenter: parent.horizontalCenter }
+            }
+        }
+    }
+
+    Slide {
+        Rectangle {
+            anchors.fill: parent
+            color: "#0a0a1a"
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 15
+                
+                Text { text: "🎮"; font.pixelSize: 60; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "Gaming Ready"; font.pixelSize: 24; color: "#ffffff"; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "Steam, Lutris, Vulkan drivers, GameMode,\nand MangoHud — all pre-configured."; font.pixelSize: 14; color: "#aaaaaa"; horizontalAlignment: Text.AlignHCenter; anchors.horizontalCenter: parent.horizontalCenter }
+            }
+        }
+    }
+
+    Slide {
+        Rectangle {
+            anchors.fill: parent
+            color: "#0a0a1a"
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 15
+                
+                Text { text: "🚀"; font.pixelSize: 60; color: "#00ffaa"; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "CachyOS Performance Engine"; font.pixelSize: 24; color: "#ffffff"; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "BORE & Sched-Ext CPU schedulers, x86-64-v3 instructions,\nAnanicy-cpp process rules, and split-lock mitigation."; font.pixelSize: 14; color: "#aaaaaa"; horizontalAlignment: Text.AlignHCenter; anchors.horizontalCenter: parent.horizontalCenter }
+            }
+        }
+    }
+
+    Slide {
+        Rectangle {
+            anchors.fill: parent
+            color: "#0a0a1a"
+            
+            Column {
+                anchors.centerIn: parent
+                spacing: 15
+                
+                Text { text: "🛡️"; font.pixelSize: 60; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "Secure by Default"; font.pixelSize: 24; color: "#ffffff"; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: "UFW firewall enabled, balanced kernel hardening,\nand EarlyOOM protection."; font.pixelSize: 14; color: "#aaaaaa"; horizontalAlignment: Text.AlignHCenter; anchors.horizontalCenter: parent.horizontalCenter }
+            }
+        }
+    }
+}
+QML
+
+# Create Calamares settings (module execution order)
+cat > /etc/calamares/settings.conf << 'SETTINGS'
+---
+modules-search: [ local ]
+
+instances:
+- id:       octagonos
+  module:   packages
+  config:   packages.conf
+
+sequence:
+- show:
+  - welcome
+  - locale
+  - keyboard
+  - partition
+  - users
+  - summary
+- exec:
+  - partition
+  - mount
+  - unpackfs
+  - machineid
+  - fstab
+  - locale
+  - keyboard
+  - localecfg
+  - luksbootkeyfile
+  - users
+  - displaymanager
+  - networkcfg
+  - hwclock
+  - services-systemd
+  - packages@octagonos
+  - bootloader
+  - umount
+- show:
+  - finished
+
+branding: octagonos
+
+prompt-install: true
+dont-chroot: false
+oem-setup: false
+disable-cancel: false
+disable-cancel-during-exec: false
+SETTINGS
+
+# Create desktop entry for installer on live desktop
+mkdir -p /usr/share/applications
+cat > /usr/share/applications/octagonos-installer.desktop << 'DESKTOP'
+[Desktop Entry]
+Type=Application
+Name=Install OctagonOS
+Comment=Install OctagonOS to your hard drive
+Exec=pkexec calamares
+Icon=calamares
+Terminal=false
+Categories=System;
+Keywords=install;system;os;
+DESKTOP
+
+# Add installer shortcut to desktop for live session
+mkdir -p /etc/skel/Desktop
+cp /usr/share/applications/octagonos-installer.desktop /etc/skel/Desktop/
+chmod +x /etc/skel/Desktop/octagonos-installer.desktop
+
+echo "[OctagonOS] Calamares installer configured successfully."
