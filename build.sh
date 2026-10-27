@@ -53,8 +53,14 @@ preflight() {
     # shellcheck disable=SC1091
     source /etc/os-release
     case "${ID:-}" in
-        debian|ubuntu|linuxmint|pop) ok "Detected host OS: ${PRETTY_NAME}" ;;
-        *) die "Unsupported host OS '${ID}'. Run this on Debian or Ubuntu." ;;
+        debian|ubuntu|linuxmint|pop|kali) ok "Detected host OS: ${PRETTY_NAME}" ;;
+        *)
+            if [[ "${ID_LIKE:-}" == *"debian"* || "${ID_LIKE:-}" == *"ubuntu"* ]]; then
+                ok "Detected Debian/Ubuntu-derived OS: ${PRETTY_NAME}"
+            else
+                die "Unsupported host OS '${ID}'. Run this on Debian or Ubuntu."
+            fi
+            ;;
     esac
 
     # Check disk space (need ~15 GB free)
