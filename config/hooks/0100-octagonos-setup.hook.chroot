@@ -210,6 +210,18 @@ fi
 rm -rf "${ANANICY_TMP}"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 14b. Download & install Fastfetch from GitHub (not in Bookworm repo)
+# ─────────────────────────────────────────────────────────────────────────────
+info "Installing Fastfetch from GitHub releases …"
+FF_TMP=$(mktemp -d)
+curl -fsSL -o "${FF_TMP}/fastfetch.deb" "https://github.com/fastfetch-cli/fastfetch/releases/download/2.38.0/fastfetch-linux-amd64.deb" 2>/dev/null || true
+if [ -s "${FF_TMP}/fastfetch.deb" ]; then
+    dpkg -i "${FF_TMP}/fastfetch.deb" 2>/dev/null || apt-get install -f -y 2>/dev/null || true
+    info "Fastfetch installed successfully"
+fi
+rm -rf "${FF_TMP}"
+
+# ─────────────────────────────────────────────────────────────────────────────
 # 14b. Add XanMod-BORE & x86-64-v3 Gaming Kernel Repository
 # ─────────────────────────────────────────────────────────────────────────────
 info "Setting up XanMod-BORE (CachyOS scheduler) kernel repository …"

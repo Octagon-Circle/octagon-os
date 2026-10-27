@@ -87,7 +87,6 @@ bluez
 # --- System Utilities ---
 htop
 btop
-fastfetch
 neofetch
 curl
 wget
@@ -133,7 +132,6 @@ wayland-protocols
 wl-clipboard
 grim
 slurp
-swappy
 waybar
 wofi
 swaybg
