@@ -256,6 +256,10 @@ build() {
     umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
     umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
 
+    # Clean stale stagefiles and queued package files so package list changes are always applied
+    rm -f .build/chroot_package-lists* .build/chroot_install-packages*
+    rm -f "${SCRIPT_DIR}/chroot/root/packages.chroot"* 2>/dev/null || true
+
     lb build 2>&1 | tee "${LOG_FILE}"
     local rc=${PIPESTATUS[0]}
 
