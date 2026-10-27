@@ -34,12 +34,12 @@ if ! command -v Hyprland &>/dev/null; then
         
         # Attempt to fetch community-built deb if available
         COMMUNITY_DEB=$(curl -fsSL "https://api.github.com/repos/JaKooLit/Debian-Hyprland/releases/latest" 2>/dev/null \
-            | grep -oP '"browser_download_url":\s*"\K[^"]*amd64\.deb' | head -1) || true
+            | grep -oP '"browser_download_url":\s*"\K[^"]*amd64\.deb' 2>/dev/null | head -1 || true)
 
         if [ -n "${COMMUNITY_DEB:-}" ]; then
             info "Downloading precompiled Hyprland deb from ${COMMUNITY_DEB} …"
             curl -fsSL -o "${TMP_DIR}/hyprland.deb" "$COMMUNITY_DEB" || true
-            dpkg -i "${TMP_DIR}/hyprland.deb" 2>/dev/null || apt-get install -f -y
+            dpkg -i "${TMP_DIR}/hyprland.deb" 2>/dev/null || apt-get install -f -y 2>/dev/null || true
         fi
         rm -rf "${TMP_DIR}"
     }

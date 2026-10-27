@@ -4,7 +4,7 @@ set -e
 
 echo "[OctagonOS] Installing Calamares installer framework..."
 
-# Install Calamares and its dependencies
+# Install Calamares and its dependencies (if not already installed via package-lists)
 apt-get install -y --no-install-recommends \
     calamares \
     calamares-settings-debian \
@@ -12,7 +12,7 @@ apt-get install -y --no-install-recommends \
     qml-module-qtquick-controls \
     qml-module-qtquick-controls2 \
     qml-module-qtquick-layouts \
-    qml-module-qtquick-window2
+    qml-module-qtquick-window2 2>/dev/null || true
 
 # Create OctagonOS branding directory
 mkdir -p /etc/calamares/branding/octagonos

@@ -72,6 +72,43 @@ preflight() {
     else
         ok "Disk space: ${free_gb} GB free"
     fi
+
+    # Check RAM & Swap to guarantee no OOM crash during squashfs compression
+    local mem_total_mb
+    mem_total_mb=$(free -m | awk '/^Mem:/{print $2}')
+    local swap_total_mb
+    swap_total_mb=$(free -m | awk '/^Swap:/{print $2}')
+    local total_vm=$(( mem_total_mb + swap_total_mb ))
+
+    if (( total_vm < 6000 )); then
+        info "Host has ${mem_total_mb}MB RAM and ${swap_total_mb}MB Swap (< 6GB total)."
+        info "Activating 4GB swapfile to prevent OOM killer during squashfs compression …"
+        if [[ ! -f /swapfile ]]; then
+            fallocate -l 4G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=4096 status=none 2>/dev/null || true
+            chmod 600 /swapfile 2>/dev/null || true
+            mkswap /swapfile >/dev/null 2>&1 || true
+        fi
+        swapon /swapfile 2>/dev/null || true
+        local new_swap
+        new_swap=$(free -m | awk '/^Swap:/{print $2}')
+        ok "Swap active: ${new_swap}MB (Total virtual memory: $(( mem_total_mb + new_swap ))MB)"
+    else
+        ok "Virtual memory: ${total_vm}MB (RAM: ${mem_total_mb}MB, Swap: ${swap_total_mb}MB)"
+    fi
+}
+
+# ── Unmount any active chroot mounts safely ──────────────────────────────────
+unmount_chroot() {
+    info "Ensuring no active chroot mounts remain …"
+    if [ -d "${SCRIPT_DIR}/chroot" ]; then
+        grep "${SCRIPT_DIR}/chroot" /proc/mounts | awk '{print $2}' | sort -r | while read -r mnt; do
+            umount -lf "$mnt" 2>/dev/null || true
+        done
+    fi
+    umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
 }
 
 # ── Install prerequisites ───────────────────────────────────────────────────
@@ -173,17 +210,14 @@ configure() {
         fi
     done
 
-    # Unmount any active chroot mounts before cleaning
-    umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
-    umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
-    umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
-    umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
+    # Safely unmount any active chroot mounts
+    unmount_chroot
 
-    # Clean any prior partial state and stale generated lb files (keeping custom hooks/includes/packages)
+    # Clean any prior partial state and stale generated lb files (keeping custom hooks/includes/packages and download cache)
     rm -rf .build/ chroot/ binary/ source/
     rm -f chroot.packages.install chroot.packages.live binary.packages
     rm -f config/common config/bootstrap config/chroot config/binary config/source
-    lb clean --purge 2>/dev/null || true
+    lb clean 2>/dev/null || true
 
     # Detect whether lb uses --bootloaders (Debian newer) or --bootloader (Ubuntu/Debian 3.x)
     local bl_opt="--bootloader"
@@ -252,10 +286,7 @@ build() {
     done
 
     # Ensure any previous stale mounts are cleanly unmounted
-    umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
-    umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
-    umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
-    umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
+    unmount_chroot
 
     # Clean stale stagefiles and queued package files so package list changes are always applied
     rm -f .build/chroot_package-lists* .build/chroot_install-packages*

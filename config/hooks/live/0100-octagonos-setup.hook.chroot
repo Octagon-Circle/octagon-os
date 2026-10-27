@@ -22,6 +22,8 @@ warn()  { echo "[OctagonOS-hook] WARNING: $*" >&2; }
 info "Enabling i386 architecture and installing Steam …"
 dpkg --add-architecture i386
 apt-get update -qq
+echo "steam steam/license note ''" | debconf-set-selections 2>/dev/null || true
+echo "steam steam/question select I AGREE" | debconf-set-selections 2>/dev/null || true
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends steam-installer || true
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -199,7 +201,7 @@ if [ -n "${ANANICY_URL:-}" ]; then
     # Download and install CachyOS community rules
     info "Installing CachyOS community rules for ananicy-cpp …"
     mkdir -p /etc/ananicy.d
-    RULES_URL="https://github.com/CachyOS/cachyos-ananicy-rules/archive/refs/heads/master.tar.gz"
+    RULES_URL="https://github.com/CachyOS/ananicy-rules/archive/refs/heads/master.tar.gz"
     curl -fsSL "$RULES_URL" | tar -xz -C /etc/ananicy.d --strip-components=1 2>/dev/null || true
     
     systemctl enable ananicy-cpp 2>/dev/null || true
@@ -232,7 +234,8 @@ cat > /etc/apt/sources.list.d/xanmod-release.list <<'XAN'
 deb [signed-by=/etc/apt/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main
 XAN
 
-chmod +x /usr/local/bin/octagonos-hello 2>/dev/null || true
+chmod +x /usr/local/bin/octagonos-* 2>/dev/null || true
+chmod +x /etc/profile.d/octagonos-env.sh 2>/dev/null || true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 15. Kernel parameter tuning (sysctl)
