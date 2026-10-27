@@ -59,9 +59,6 @@ gstreamer1.0-plugins-bad
 gstreamer1.0-libav
 
 # --- Gaming ---
-# NOTE: steam-installer requires i386 architecture.  The build script and
-#       chroot hook enable it automatically via `dpkg --add-architecture i386`.
-steam-installer
 lutris
 gamemode
 mangohud

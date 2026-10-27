@@ -17,11 +17,12 @@ info()  { echo "[OctagonOS-hook] $*"; }
 warn()  { echo "[OctagonOS-hook] WARNING: $*" >&2; }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. Enable i386 architecture (required for Steam and 32-bit libraries)
+# 1. Enable i386 architecture and install Steam (required for 32-bit libraries)
 # ─────────────────────────────────────────────────────────────────────────────
-info "Enabling i386 architecture …"
+info "Enabling i386 architecture and installing Steam …"
 dpkg --add-architecture i386
 apt-get update -qq
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends steam-installer || true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Ensure contrib, non-free, non-free-firmware are in sources

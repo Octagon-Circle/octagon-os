@@ -164,11 +164,12 @@ configure() {
 
     cd "${SCRIPT_DIR}"
 
-    # Auto-sanitize: remove any residual fastfetch or swappy entries from all package lists
+    # Auto-sanitize: remove any residual fastfetch, swappy, or steam-installer entries from all package lists
     for f in config/package-lists/*.list* config/packages/*.list*; do
         if [ -f "$f" ]; then
             sed -i '/^fastfetch$/d' "$f" 2>/dev/null || true
             sed -i '/^swappy$/d' "$f" 2>/dev/null || true
+            sed -i '/^steam-installer$/d' "$f" 2>/dev/null || true
         fi
     done
 
