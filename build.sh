@@ -154,6 +154,21 @@ build() {
 
     cd "${SCRIPT_DIR}"
 
+    # Apply container compatibility patches for Colab/Docker/LXD environments
+    info "Applying container filesystem compatibility patches (bind mounts) …"
+    for dir in /usr/lib/live/build /usr/share/live/build /usr/lib/live/build/scripts/build; do
+        if [ -d "$dir" ]; then
+            sed -i 's|mount -t proc.*chroot/proc|mount --bind /proc chroot/proc|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|mount -t sysfs.*chroot/sys|mount --bind /sys chroot/sys|g' "$dir"/* 2>/dev/null || true
+        fi
+    done
+
+    # Ensure any previous stale mounts are cleanly unmounted
+    umount -lf "${SCRIPT_DIR}/chroot/proc" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/sys" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/dev/pts" 2>/dev/null || true
+    umount -lf "${SCRIPT_DIR}/chroot/dev" 2>/dev/null || true
+
     lb build 2>&1 | tee "${LOG_FILE}"
     local rc=${PIPESTATUS[0]}
 
