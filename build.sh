@@ -296,9 +296,13 @@ build() {
     # Ensure any previous stale mounts are cleanly unmounted
     unmount_chroot
 
-    # Clean stale stagefiles and queued package files so package list changes are always applied
+    # Clean stale stagefiles, queued package files, and residual repos
     rm -f .build/chroot_package-lists* .build/chroot_install-packages*
     rm -f "${SCRIPT_DIR}/chroot/root/packages.chroot"* 2>/dev/null || true
+    rm -f "${SCRIPT_DIR}/chroot/etc/apt/sources.list.d/xanmod"* 2>/dev/null || true
+    rm -f "${SCRIPT_DIR}/chroot/var/lib/octagonos-setup-done" 2>/dev/null || true
+    rm -f "${SCRIPT_DIR}/chroot/var/lib/calamares-setup-done" 2>/dev/null || true
+    rm -f "${SCRIPT_DIR}/chroot/var/lib/hyprland-setup-done" 2>/dev/null || true
 
     lb build 2>&1 | tee "${LOG_FILE}"
     local rc=${PIPESTATUS[0]}

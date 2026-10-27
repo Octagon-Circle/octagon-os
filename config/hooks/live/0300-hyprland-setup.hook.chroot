@@ -9,6 +9,12 @@ set -euo pipefail
 info()  { echo "[OctagonOS-Hyprland] $*"; }
 warn()  { echo "[OctagonOS-Hyprland] WARNING: $*" >&2; }
 
+# Guard against duplicate runs
+if [ -f /var/lib/hyprland-setup-done ]; then
+    info "Hyprland setup already completed. Skipping duplicate execution."
+    exit 0
+fi
+
 info "Configuring Hyprland Wayland Compositor …"
 
 # Make helper scripts executable
@@ -60,4 +66,5 @@ DESKTOP
 # Ensure cliphist / wofi / waybar have proper default configs
 chmod 644 /usr/share/wayland-sessions/hyprland.desktop
 
+touch /var/lib/hyprland-setup-done
 info "Hyprland setup completed successfully."

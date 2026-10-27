@@ -2,6 +2,12 @@
 # OctagonOS: Install and configure Calamares graphical installer
 set -e
 
+# Guard against duplicate runs
+if [ -f /var/lib/calamares-setup-done ]; then
+    echo "[OctagonOS] Calamares installer already configured. Skipping duplicate execution."
+    exit 0
+fi
+
 echo "[OctagonOS] Installing Calamares installer framework..."
 
 # Install Calamares and its dependencies (if not already installed via package-lists)
@@ -223,4 +229,5 @@ mkdir -p /etc/skel/Desktop
 cp /usr/share/applications/octagonos-installer.desktop /etc/skel/Desktop/
 chmod +x /etc/skel/Desktop/octagonos-installer.desktop
 
+touch /var/lib/calamares-setup-done
 echo "[OctagonOS] Calamares installer configured successfully."
