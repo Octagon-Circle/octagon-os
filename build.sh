@@ -98,6 +98,24 @@ install_deps() {
     ok "All build dependencies satisfied"
 }
 
+# ── Upgrade legacy live-build 3.0 (from Ubuntu 22.04) to modern Debian version ───
+ensure_modern_live_build() {
+    info "Verifying live-build version …"
+    local lb_ver
+    lb_ver=$(dpkg -s live-build 2>/dev/null | grep '^Version:' | awk '{print $2}' || true)
+
+    if [[ "$lb_ver" =~ ^3\.0 || "$lb_ver" == "" ]]; then
+        info "Upgrading legacy live-build (${lb_ver:-not installed}) to official Debian 12 package (1:20230502) …"
+        local lb_deb="/tmp/live-build_20230502_all.deb"
+        curl -fsSL -o "${lb_deb}" "http://ftp.debian.org/debian/pool/main/l/live-build/live-build_20230502_all.deb"
+        dpkg -i "${lb_deb}" 2>/dev/null || apt-get install -f -y --no-install-recommends
+        rm -f "${lb_deb}"
+        ok "live-build upgraded to $(dpkg -s live-build 2>/dev/null | grep '^Version:' | awk '{print $2}')"
+    else
+        ok "live-build is already up-to-date (${lb_ver})"
+    fi
+}
+
 # ── Ensure host has latest Debian 12 (Bookworm) GPG keys ─────────────────────
 ensure_debian_keyring() {
     info "Verifying Debian 12 (Bookworm) GPG archive keys on host …"
@@ -210,6 +228,9 @@ build() {
             sed -i 's|\${DISTRIBUTION}/updates|\${DISTRIBUTION}-security|g' "$dir"/* 2>/dev/null || true
             sed -i 's|@DISTRIBUTION@/updates|@DISTRIBUTION@-security|g' "$dir"/* 2>/dev/null || true
             sed -i 's|bookworm/updates|bookworm-security|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|/Contents-\${LB_ARCHITECTURES}\.gz|/main/Contents-\${LB_ARCHITECTURES}\.gz|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|/Contents-\${ARCHITECTURE}\.gz|/main/Contents-\${ARCHITECTURE}\.gz|g' "$dir"/* 2>/dev/null || true
+            sed -i 's|/Contents-amd64\.gz|/main/Contents-amd64\.gz|g' "$dir"/* 2>/dev/null || true
         fi
     done
 
@@ -275,6 +296,7 @@ main() {
 
     preflight
     install_deps
+    ensure_modern_live_build
     ensure_debian_keyring
     enable_i386
     configure "$@"
