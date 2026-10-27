@@ -74,7 +74,7 @@ install_deps() {
 
     local pkgs=(live-build debootstrap squashfs-tools xorriso
                 grub-efi-amd64-bin grub-pc-bin syslinux syslinux-common
-                isolinux mtools dosfstools apt-cacher-ng)
+                isolinux mtools dosfstools)
 
     local missing=()
     for pkg in "${pkgs[@]}"; do
